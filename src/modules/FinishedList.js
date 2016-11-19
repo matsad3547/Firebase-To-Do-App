@@ -3,6 +3,8 @@ import { Link } from 'react-router'
 
 export default React.createClass({
   render() {
+
+    
     return (
       <div className='finished-list'>
         <h3>Finshed Tasks</h3>

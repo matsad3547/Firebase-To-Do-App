@@ -1,15 +1,4 @@
-// Initialize Firebase
-var config = {
-  apiKey: "AIzaSyAmJBXk8-6Ag5e-VTpHwqCa3zooEdd3KHM",
-  authDomain: "wk-08-firebase-app.firebaseapp.com",
-  databaseURL: "https://wk-08-firebase-app.firebaseio.com",
-  storageBucket: "wk-08-firebase-app.appspot.com",
-  messagingSenderId: "592761265728"
-};
 
-import * as firebase from "firebase";
-
-firebase.initializeApp(config);
 
 import React from 'react'
 import { render } from 'react-dom'
@@ -21,5 +10,6 @@ import { Router, Route, browserHistory, IndexRoute } from 'react-router'
 // import Home from './modules/Home'
 import Routes from './modules/Routes'
 
+// module.export.FbApp = FbApp.database();
+
 render(<Router routes={Routes} history={browserHistory}/>, document.getElementById('app'));
-//
