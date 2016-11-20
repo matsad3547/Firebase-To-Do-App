@@ -23,3 +23,7 @@ li {
   list-style: none;
   display: inline;
 }
+
+.form {
+  display: inline;
+}

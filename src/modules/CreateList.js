@@ -1,7 +1,21 @@
 import React from 'react'
 import { Link } from 'react-router'
+import * as firebase from "firebase";
 
 export default React.createClass({
+
+  handleSubmit: function(e) {
+    e.preventDefault();
+    if (this.state.text && this.state.text.trim().length !== 0) {
+      this.firebaseRef.push({
+        text: this.state.text
+      });
+      this.setState({
+        text: ''
+      });
+    }
+  },
+
   render() {
     return (
       <div>
