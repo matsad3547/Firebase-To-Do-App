@@ -99,6 +99,7 @@ class List extends React.Component {
 		let updates = {}
 		updates['todos/' + taskId] = task
 		this.props.fbRef.update(updates)
+    this.setState({ task: ''})
 	}
 
 // Gets react to track input as it changes
