@@ -70,6 +70,15 @@ const CreateList = () => {
 	)
 }
 
+const listLength = (ref) => {
+  let length = 0
+  ref.on('value', snapshot => {
+    let refObj = snapshot.val()
+    length = Object.values(refObj).length
+  })
+  return length
+}
+
 class List extends React.Component {
 
 	constructor () {
@@ -81,8 +90,8 @@ class List extends React.Component {
 	}
 
 	componentDidMount () {
-		const fbToDoRef = this.props.fbRef.child('todos')
-		fbToDoRef.on('value', snapshot => {
+		const fbListRef = this.props.fbRef.child('todos')
+		fbListRef.on('value', snapshot => {
 			let taskObj = snapshot.val()
 			let toDos = Object.values(taskObj)
 			this.setState({
@@ -94,10 +103,8 @@ class List extends React.Component {
 	handleSubmit (e) {
     e.preventDefault()
     let task = this.state.task
-    const fbToDoRef = this.props.fbRef.child('todos');
-    console.log('length:',this.state.todos.length);
-		const taskId = fbToDoRef.push().key
-    console.log('taskId:', taskId);
+    const fbListRef = this.props.fbRef.child('todos');
+		const taskId = fbListRef.push().key
 		let updates = {}
 		updates['todos/' + taskId] = task
 		this.props.fbRef.update(updates)
@@ -112,10 +119,11 @@ class List extends React.Component {
 
 	render () {
     let input
-		var toDos = this.state.toDos
+		let toDos = this.state.toDos
+    // let length = toDos.length
     // var fbRef = this.props.fbRef;
-    const fbToDoRef = fbRef.child('todos');
-    // console.log(fbToDoRef);
+    const fbListRef = fbRef.child('todos');
+    // console.log(fbListRef);
 
 		return (
       <div className='list'>
@@ -139,19 +147,31 @@ class List extends React.Component {
 // // <li><NavLink to="/repos">Repos</NavLink></li>
 // //
 //
+const getKeyByVal = (ref, val) => {
+  let obj
+  ref.on('value', snapshot => {
+    obj = snapshot.val()
+  })
+  for (let key in obj) {
+    if (obj.hasOwnProperty(key) && obj[key] === val) {
+      return key
+    }
+  }
+}
+
 class ToDoItems extends React.Component {
 
 	toggleTask (self) {
       // pull in task
 		let completedTask = self.target.id
-    // push task to finished list
+    // key in todo list of task to be deleted
+    let key = getKeyByVal(fbRef.child('todos'), completedTask)
 		const fbCompletedRef = this.props.fbRef.child('completed')
 		const taskId = fbCompletedRef.push().key
 		let updates = {}
 		updates['completed/' + taskId] = completedTask
 		this.props.fbRef.update(updates)
-    //identify task key from todo list
-    // delete task from todo list
+    //TODO delete task from todo list
 	}
 
 	render () {
@@ -181,8 +201,8 @@ class FinishedList extends React.Component {
       }
 
     componentDidMount() {
-      const fbToDoRef = this.props.fbRef.child('completed');
-      fbToDoRef.on('value', snapshot => {
+      const fbListRef = this.props.fbRef.child('completed');
+      fbListRef.on('value', snapshot => {
         let completedObj = snapshot.val();
         let completed = Object.values(completedObj);
         this.setState({
@@ -195,7 +215,7 @@ class FinishedList extends React.Component {
 
     var completed = this.state.completed;
     var fbRef = this.props.fbRef;
-    const fbToDoRef = fbRef.child('todos');
+    const fbListRef = fbRef.child('todos');
 
     return (
       <div className='list'>
