@@ -76,6 +76,7 @@ class List extends React.Component {
 		super()
 		this.state = {
 			toDos: ['none'],
+      task: ''
 		}
 	};
 
@@ -90,21 +91,24 @@ class List extends React.Component {
 		})
 	};
 
-	onChange (e) {
-		this.setState({text: e.target.value})
-		console.log(this.state.text)
-	};
-
 	handleSubmit (e) {
-		let task = document.getElementById('listInput').value
-      const fbToDoRef = this.props.fbRef.child('todos');
+    e.preventDefault()
+    let task = this.state.task
+    const fbToDoRef = this.props.fbRef.child('todos');
 		const taskId = fbToDoRef.push().key
 		let updates = {}
 		updates['todos/' + taskId] = task
 		this.props.fbRef.update(updates)
 	}
 
+// Gets react to track input as it changes
+  onInput (e) {
+    const text = e.target.value
+    this.setState({ task: text })
+  }
+
 	render () {
+    let input
 		var toDos = this.state.toDos
     // var fbRef = this.props.fbRef;
     const fbToDoRef = fbRef.child('todos');
@@ -112,8 +116,8 @@ class List extends React.Component {
 
 		return (
       <div className='list'>
-        <form onSubmit={this.handleSubmit}>
-          <input type="text" placeholder="New Task" className="form" id="listInput" /> {' '}
+        <form onSubmit={this.handleSubmit.bind(this)}>
+          <input type="text" placeholder="New Task" className="form" id="listInput" onInput={this.onInput.bind(this)} value={this.state.task}/> {' '}
           <button className="form" type="submit">Add</button>
         </form>
         <ul>
