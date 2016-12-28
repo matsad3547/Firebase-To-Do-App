@@ -78,7 +78,7 @@ class List extends React.Component {
 			toDos: ['none'],
       task: ''
 		}
-	};
+	}
 
 	componentDidMount () {
 		const fbToDoRef = this.props.fbRef.child('todos')
@@ -89,13 +89,15 @@ class List extends React.Component {
 				toDos: toDos,
 			})
 		})
-	};
+	}
 
 	handleSubmit (e) {
     e.preventDefault()
     let task = this.state.task
     const fbToDoRef = this.props.fbRef.child('todos');
+    console.log('length:',this.state.todos.length);
 		const taskId = fbToDoRef.push().key
+    console.log('taskId:', taskId);
 		let updates = {}
 		updates['todos/' + taskId] = task
 		this.props.fbRef.update(updates)
@@ -148,6 +150,7 @@ class ToDoItems extends React.Component {
 		let updates = {}
 		updates['completed/' + taskId] = completedTask
 		this.props.fbRef.update(updates)
+    //identify task key from todo list
     // delete task from todo list
 	}
 
@@ -175,7 +178,7 @@ class FinishedList extends React.Component {
         this.state = {
           completed: ['none']
         }
-      };
+      }
 
     componentDidMount() {
       const fbToDoRef = this.props.fbRef.child('completed');
@@ -184,9 +187,9 @@ class FinishedList extends React.Component {
         let completed = Object.values(completedObj);
         this.setState({
           completed: completed
-        });
-      });
-    };
+        })
+      })
+    }
 
   render() {
 
