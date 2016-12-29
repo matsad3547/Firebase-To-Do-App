@@ -24,6 +24,8 @@ const fbRef = firebase
   .ref()
   .child('test1')
 
+const listTitle = 'todos'
+
 export default class App extends React.Component {
 
 	render () {
@@ -35,7 +37,10 @@ export default class App extends React.Component {
 
         </ul>
         <CreateList />
-        <List fbRef={fbRef}/>
+        <List
+					fbRef={fbRef}
+					listTitle={listTitle}
+					/>
         <FinishedList fbRef={fbRef}/>
         {this.props.children}
       </div>
@@ -90,7 +95,7 @@ class List extends React.Component {
 	}
 
 	componentDidMount () {
-		const fbListRef = this.props.fbRef.child('todos')
+		const fbListRef = this.props.fbRef.child(listTitle)
 		fbListRef.on('value', snapshot => {
 			let taskObj = snapshot.val()
 			let toDos = Object.values(taskObj)
@@ -103,7 +108,7 @@ class List extends React.Component {
 	handleSubmit (e) {
     e.preventDefault()
     let task = this.state.task
-    const fbListRef = this.props.fbRef.child('todos');
+    const fbListRef = this.props.fbRef.child(listTitle);
 		const taskId = fbListRef.push().key
 		let updates = {}
 		updates['todos/' + taskId] = task
@@ -122,20 +127,25 @@ class List extends React.Component {
 		let toDos = this.state.toDos
     // let length = toDos.length
     // var fbRef = this.props.fbRef;
-    const fbListRef = fbRef.child('todos');
+    const fbListRef = fbRef.child(listTitle);
     // console.log(fbListRef);
 
 		return (
       <div className='list'>
+				<h3>{listTitle}</h3>
         <form onSubmit={this.handleSubmit.bind(this)}>
           <input type="text" placeholder="New Task" className="form" id="listInput" onInput={this.onInput.bind(this)} value={this.state.task}/> {' '}
           <button className="form" type="submit">Add</button>
         </form>
         <ul>
-          <li className="label">Done? </li>
+          <li className="label">Done?</li>
           <li className="label">To-Do Item</li>
         </ul>
-        <ToDoItems toDos={toDos} fbRef={fbRef}/>
+        <ToDoItems
+					toDos={toDos}
+					fbRef={fbRef}
+					fbListRef={fbListRef}
+					/>
       </div>
 		)
 	}
@@ -162,28 +172,32 @@ const getKeyByVal = (ref, val) => {
 class ToDoItems extends React.Component {
 
 	toggleTask (self) {
-      // pull in task
+		self.preventDefault()
+		
+		const { fbRef, fbListRef } = this.props
 		let completedTask = self.target.id
-    // key in todo list of task to be deleted
-    let key = getKeyByVal(fbRef.child('todos'), completedTask)
-		const fbCompletedRef = this.props.fbRef.child('completed')
+    let deleteKey = getKeyByVal(fbListRef, completedTask)
+		const fbCompletedRef = fbRef.child('completed')
 		const taskId = fbCompletedRef.push().key
+
 		let updates = {}
 		updates['completed/' + taskId] = completedTask
-		this.props.fbRef.update(updates)
-    //TODO delete task from todo list
+		fbRef.update(updates)
+
+		let deleted = {}
+		deleted['todos/' + deleteKey] = null
+		fbRef.update(deleted)
 	}
 
 	render () {
-		const fbRef = this.props.fbRef
-		let tasks = this.props.toDos
+		const { fbRef, toDos } = this.props
 
 		return (
       <div>
-        {tasks.map((task, i) =>
+        {toDos.map((toDo, i) =>
         <li key={i}>
-          <input type="checkbox" key={i + 'B'} className="task" id={task} onChange={this.toggleTask.bind(this)}></input>
-          <p key={i + 'A'} className="task">{task}</p>
+          <input type="checkbox" key={i + 'B'} className="task" id={toDo} onChange={this.toggleTask.bind(this)}></input>
+          <p key={i + 'A'} className="task">{toDo}</p>
         </li>
       )}
       </div>
@@ -215,7 +229,7 @@ class FinishedList extends React.Component {
 
     var completed = this.state.completed;
     var fbRef = this.props.fbRef;
-    const fbListRef = fbRef.child('todos');
+    const fbListRef = fbRef.child(listTitle);
 
     return (
       <div className='list'>
