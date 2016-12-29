@@ -48,31 +48,31 @@ export default class App extends React.Component {
 	}
 }
 
-const CreateList = () => {
+class CreateList extends React.Component {
 
-  let input
-
-	const handleSubmit = e => {
-		e.preventDefault()
-		if (this.state.text && this.state.text.trim().length !== 0) {
-			this.firebaseRef.push({
-				text: this.state.text,
-			})
-			this.setState({
-				text: '',
-			})
+	handleSubmit (e) {
+			e.preventDefault()
+			if (this.state.text && this.state.text.trim().length !== 0) {
+				this.firebaseRef.push({
+					text: this.state.text,
+				})
+				this.setState({
+					text: '',
+				})
+			}
 		}
-	}
 
-	return (
-    <div>
-      <h3>Create a New To-Do List</h3>
-      <form onSubmit={handleSubmit}>
-        <input type="text" placeholder="New List Name" ref={node => input = node} /> {' '}
-        <button type="submit">Go</button>
-      </form>
-    </div>
-	)
+	render() {
+		return (
+			<div>
+				<h3>Create a New To-Do List</h3>
+				<form onSubmit={this.handleSubmit.bind(this)}>
+					<input type="text" placeholder="New List Name"  /> {' '}
+					<button type="submit">Go</button>
+				</form>
+			</div>
+		)
+	}
 }
 
 class List extends React.Component {
