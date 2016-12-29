@@ -75,15 +75,6 @@ const CreateList = () => {
 	)
 }
 
-const listLength = (ref) => {
-  let length = 0
-  ref.on('value', snapshot => {
-    let refObj = snapshot.val()
-    length = Object.values(refObj).length
-  })
-  return length
-}
-
 class List extends React.Component {
 
 	constructor () {
@@ -125,10 +116,6 @@ class List extends React.Component {
 	render () {
     let input
 		let toDos = this.state.toDos
-    // let length = toDos.length
-    // var fbRef = this.props.fbRef;
-    const fbListRef = fbRef.child(listTitle);
-    // console.log(fbListRef);
 
 		return (
       <div className='list'>
@@ -144,7 +131,7 @@ class List extends React.Component {
         <ToDoItems
 					toDos={toDos}
 					fbRef={fbRef}
-					fbListRef={fbListRef}
+					listTitle={listTitle}
 					/>
       </div>
 		)
@@ -172,11 +159,12 @@ const getKeyByVal = (ref, val) => {
 class ToDoItems extends React.Component {
 
 	toggleTask (self) {
+
 		self.preventDefault()
-		
-		const { fbRef, fbListRef } = this.props
+
+		const { fbRef, listTitle } = this.props
 		let completedTask = self.target.id
-    let deleteKey = getKeyByVal(fbListRef, completedTask)
+    let deleteKey = getKeyByVal(fbRef.child(listTitle), completedTask)
 		const fbCompletedRef = fbRef.child('completed')
 		const taskId = fbCompletedRef.push().key
 
@@ -185,19 +173,20 @@ class ToDoItems extends React.Component {
 		fbRef.update(updates)
 
 		let deleted = {}
-		deleted['todos/' + deleteKey] = null
+		let deletedItemList = listTitle + '/'
+		deleted[deletedItemList + deleteKey] = null
 		fbRef.update(deleted)
 	}
 
 	render () {
-		const { fbRef, toDos } = this.props
+		const { fbRef, toDos, listTitle } = this.props
 
 		return (
       <div>
         {toDos.map((toDo, i) =>
         <li key={i}>
-          <input type="checkbox" key={i + 'B'} className="task" id={toDo} onChange={this.toggleTask.bind(this)}></input>
-          <p key={i + 'A'} className="task">{toDo}</p>
+          <input type="checkbox" key={i + 'A'} className="task" id={toDo} onChange={this.toggleTask.bind(this)}></input>
+          <p key={i + 'B'} className="task">{toDo}</p>
         </li>
       )}
       </div>
