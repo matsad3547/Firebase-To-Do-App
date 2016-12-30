@@ -11,9 +11,6 @@ var config = {
 
 import React from 'react'
 import NavLink from './NavLink'
-// import CreateList from './CreateList'
-// import List from './List'
-// import FinishedList from './FinishedList'
 import * as firebase from 'firebase'
 
 // firebase.initializeApp(config);
@@ -28,7 +25,28 @@ const listTitle = 'todos'
 
 export default class App extends React.Component {
 
+	constructor () {
+		super()
+		this.state = {
+			toDoObj: {},
+		}
+	}
+
+	componentDidMount () {
+		fbRef.on('value', snapshot => {
+			let toDoObj = snapshot.val()
+			// console.log(toDoObj);
+			this.setState({
+				toDoObj: toDoObj,
+			})
+		})
+	}
+
 	render () {
+
+		let listTitles = Object.keys(this.state.toDoObj).filter( title => title != 'completed')
+
+		// console.log('listTitles:', listTitles);
 		return (
       <div>
         <h1>The Doozer</h1>
@@ -36,33 +54,40 @@ export default class App extends React.Component {
         <ul role="nav">
 
         </ul>
-        <CreateList />
-        <List
-					fbRef={fbRef}
-					listTitle={listTitle}
-					/>
-        <FinishedList fbRef={fbRef}/>
+				{listTitles.map( (listTitle, i) =>
+					<List
+						key={i}
+						fbRef={fbRef}
+						listTitle={listTitle}
+						toDoObj={this.state.toDoObj[listTitle]}
+						/>
+				)}
         {this.props.children}
       </div>
 		)
 	}
 }
 
+// <CreateList />
+// <FinishedList fbRef={fbRef}/>
+
 class CreateList extends React.Component {
 
-	handleSubmit (e) {
-			e.preventDefault()
-			if (this.state.text && this.state.text.trim().length !== 0) {
-				this.firebaseRef.push({
-					text: this.state.text,
-				})
-				this.setState({
-					text: '',
-				})
-			}
-		}
+	// handleSubmit (e) {
+	// 		e.preventDefault()
+	// 		console.log(e.target.value);
+	// 		if (this.state.text && this.state.text.trim().length !== 0) {
+	// 			// this.firebaseRef.push({
+	// 			// 	text: this.state.text,
+	// 			// })
+	// 			// this.setState({
+	// 			// 	text: '',
+	// 			// })
+	// 		}
+	// 	}
 
 	render() {
+
 		return (
 			<div>
 				<h3>Create a New To-Do List</h3>
@@ -75,68 +100,110 @@ class CreateList extends React.Component {
 	}
 }
 
-class List extends React.Component {
+const List = (props) => {
 
-	constructor () {
-		super()
-		this.state = {
-			toDos: ['none'],
-      task: ''
-		}
-	}
+	const { fbRef, listTitle, toDoObj } = props
+	let toDos = Object.values(toDoObj)
+	// console.log('to dos:', toDos);
 
-	componentDidMount () {
-		const fbListRef = this.props.fbRef.child(listTitle)
-		fbListRef.on('value', snapshot => {
-			let taskObj = snapshot.val()
-			let toDos = Object.values(taskObj)
-			this.setState({
-				toDos: toDos,
-			})
-		})
-	}
+	let input
 
-	handleSubmit (e) {
-    e.preventDefault()
-    let task = this.state.task
-    const fbListRef = this.props.fbRef.child(listTitle);
+	const handleSubmit = e => {
+		e.preventDefault()
+		let task = input.value
+		const fbListRef = fbRef.child(listTitle);
 		const taskId = fbListRef.push().key
 		let updates = {}
-		updates['todos/' + taskId] = task
-		this.props.fbRef.update(updates)
-    this.setState({ task: ''})
+		let updateListTitle = listTitle + '/'
+		updates[updateListTitle + taskId] = task
+		fbRef.update(updates)
+		input.value = ''
 	}
 
-// Gets react to track input as it changes
-  onInput (e) {
-    const text = e.target.value
-    this.setState({ task: text })
-  }
+	return (
 
-	render () {
-    let input
-		let toDos = this.state.toDos
-
-		return (
-      <div className='list'>
-				<h3>{listTitle}</h3>
-        <form onSubmit={this.handleSubmit.bind(this)}>
-          <input type="text" placeholder="New Task" className="form" id="listInput" onInput={this.onInput.bind(this)} value={this.state.task}/> {' '}
-          <button className="form" type="submit">Add</button>
-        </form>
-        <ul>
-          <li className="label">Done?</li>
-          <li className="label">To-Do Item</li>
-        </ul>
-        <ToDoItems
-					toDos={toDos}
-					fbRef={fbRef}
-					listTitle={listTitle}
-					/>
-      </div>
-		)
-	}
+		<div className='list'>
+			<h3>{listTitle}</h3>
+			<form onSubmit={handleSubmit}>
+				<input type="text" placeholder="New Task" className="form" id="listInput" ref={ (node) => input = node}/> {' '}
+				<button className="form" type="submit">Add</button>
+			</form>
+			<ul>
+				<li className="label">Done?</li>
+				<li className="label">To-Do Item</li>
+			</ul>
+			<ToDoItems
+				toDos={toDos}
+				fbRef={fbRef}
+				listTitle={listTitle}
+				/>
+		</div>
+	)
 }
+
+
+// class List extends React.Component {
+	//
+	// constructor () {
+	// 	super()
+	// 	this.state = {
+	// 		toDos: ['none'],
+  //     task: ''
+	// 	}
+	// }
+	//
+	// componentDidMount () {
+	// 	const fbListRef = this.props.fbRef.child(listTitle)
+	// 	fbListRef.on('value', snapshot => {
+	// 		let taskObj = snapshot.val()
+	// 		let toDos = Object.values(taskObj)
+	// 		this.setState({
+	// 			toDos: toDos,
+	// 		})
+	// 	})
+	// }
+
+// 	handleSubmit (e) {
+//     e.preventDefault()
+//     let task = this.state.task
+//     const fbListRef = this.props.fbRef.child(listTitle);
+// 		const taskId = fbListRef.push().key
+// 		let updates = {}
+// 		updates['todos/' + taskId] = task
+// 		this.props.fbRef.update(updates)
+//     this.setState({ task: ''})
+// 	}
+//
+// // Gets react to track input as it changes
+//   onInput (e) {
+//     const text = e.target.value
+//     this.setState({ task: text })
+//   }
+//
+// 	render () {
+//     let input
+// 		let toDos = this.state.toDos
+//
+// 		return (
+//       <div className='list'>
+// 				<h3>{listTitle}</h3>
+//         <form onSubmit={this.handleSubmit.bind(this)}>
+//           <input type="text" placeholder="New Task" className="form" id="listInput" onInput={this.onInput.bind(this)} value={this.state.task}/> {' '}
+//           <button className="form" type="submit">Add</button>
+//         </form>
+//         <ul>
+//           <li className="label">Done?</li>
+//           <li className="label">To-Do Item</li>
+//         </ul>
+//         <ToDoItems
+// 					toDos={toDos}
+// 					fbRef={fbRef}
+// 					listTitle={listTitle}
+// 					/>
+//       </div>
+// 		)
+// 	}
+// }
 
 // //
 // // <li><NavLink to="/" onlyActiveOnIndex>Home</NavLink></li>
@@ -144,6 +211,7 @@ class List extends React.Component {
 // // <li><NavLink to="/repos">Repos</NavLink></li>
 // //
 //
+
 const getKeyByVal = (ref, val) => {
   let obj
   ref.on('value', snapshot => {
