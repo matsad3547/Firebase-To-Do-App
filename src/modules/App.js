@@ -43,7 +43,6 @@ export default class App extends React.Component {
 	}
 
 	render () {
-		// console.log('completed:', this.state.toDoObj.completed);
 
 		let listTitles = Object.keys(this.state.toDoObj).filter( title => title != 'completed')
 		let completed = this.state.toDoObj.completed
@@ -160,13 +159,16 @@ const getKeyByVal = (ref, val) => {
   }
 }
 
-class ToDoItems extends React.Component {
+const ToDoItems = (props) => {
 
-	toggleTask (self) {
+	let input
+
+	const { fbRef, toDos, listTitle } = props
+
+	const toggleTask = self => {
 
 		self.preventDefault()
 
-		const { fbRef, listTitle } = this.props
 		let completedTask = self.target.id
     let deleteKey = getKeyByVal(fbRef.child(listTitle), completedTask)
 		const fbCompletedRef = fbRef.child('completed')
@@ -182,20 +184,16 @@ class ToDoItems extends React.Component {
 		fbRef.update(deleted)
 	}
 
-	render () {
-		const { fbRef, toDos, listTitle } = this.props
-
-		return (
-      <div>
-        {toDos.map((toDo, i) =>
-        <li key={i}>
-          <input type="checkbox" key={i + 'A'} className="task" id={toDo} onChange={this.toggleTask.bind(this)}></input>
-          <p key={i + 'B'} className="task">{toDo}</p>
-        </li>
-      )}
-      </div>
-		)
-	}
+	return (
+		<div>
+			{toDos.map((toDo, i) =>
+			<li key={i}>
+				<input type="checkbox" key={i + 'A'} className="task" id={toDo} onChange={toggleTask} ></input>
+				<p key={i + 'B'} className="task">{toDo}</p>
+			</li>
+		)}
+		</div>
+	)
 }
 
 const FinishedList = (props) => {
