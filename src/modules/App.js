@@ -35,7 +35,6 @@ export default class App extends React.Component {
 	componentDidMount () {
 		fbRef.on('value', snapshot => {
 			let toDoObj = snapshot.val()
-			// console.log(toDoObj);
 			this.setState({
 				toDoObj: toDoObj,
 			})
@@ -65,15 +64,18 @@ export default class App extends React.Component {
 						toDoObj={this.state.toDoObj[listTitle]}
 						/>
 				)}
+				<FinishedList
+					fbRef={fbRef}
+					/>
       </div>
 		)
 	}
 }
-// <FinishedList
-// 	completed={completed}
-// 	/>
 
-// <FinishedList fbRef={fbRef}/>
+//TODO Make this thing work as a stateless function!
+// <FinishedList
+// 	completed={this.state.toDoObj.completed}
+// 	/>
 
 const CreateList = (props) => {
 
@@ -170,7 +172,7 @@ const ToDoItems = (props) => {
 		self.preventDefault()
 
 		let completedTask = self.target.id
-    let deleteKey = getKeyByVal(fbRef.child(listTitle), completedTask)
+
 		const fbCompletedRef = fbRef.child('completed')
 		const taskId = fbCompletedRef.push().key
 
@@ -179,6 +181,7 @@ const ToDoItems = (props) => {
 		fbRef.update(updates)
 
 		let deleted = {}
+		let deleteKey = getKeyByVal(fbRef.child(listTitle), completedTask)
 		let deletedItemList = listTitle + '/'
 		deleted[deletedItemList + deleteKey] = null
 		fbRef.update(deleted)
@@ -196,62 +199,62 @@ const ToDoItems = (props) => {
 	)
 }
 
-const FinishedList = (props) => {
-
-	const { completed } = props
-	console.log('completed:', completed)
-
-	if (completed != undefined) {
-		return (
-			<div className='list'>
-				<h4>Completed Tasks</h4>
-				{completed.map( (task, i) =>
-					<li key={i} className="completed">{task}</li>
-				)}
-			</div>
-		)
-	}
-	return (
-		<div className='list'>
-			<h4>Completed Tasks</h4>
-			<p>The Completed List is Currently Unavailable</p>
-		</div>
-	)
-}
-
-// class FinishedList extends React.Component {
+// const FinishedList = (props) => {
 //
-//     constructor() {
-//       super();
-//         this.state = {
-//           completed: ['none']
-//         }
-//       }
+// 	const { completed } = props
+// 	console.log('completed:', completed)
 //
-//     componentDidMount() {
-//       const fbListRef = this.props.fbRef.child('completed');
-//       fbListRef.on('value', snapshot => {
-//         let completedObj = snapshot.val();
-//         let completed = Object.values(completedObj);
-//         this.setState({
-//           completed: completed
-//         })
-//       })
-//     }
-//
-//   render() {
-//
-//     var completed = this.state.completed;
-//     var fbRef = this.props.fbRef;
-//     const fbListRef = fbRef.child(listTitle);
-//
-//     return (
-//       <div className='list'>
-//         <h4>Completed Tasks</h4>
-//         {completed.map( (task, i) =>
-//         <li key={i} className="completed">{task}</li>
-//       )}
-//       </div>
-//     )
-//   }
+// 	if (completed != undefined) { //lame lifecycle anti-pattern work around
+// 		return (
+// 			<div className='list'>
+// 				<h4>Completed Tasks</h4>
+// 				{completed.map( (task, i) =>
+// 					<li key={i} className="completed">{task}</li>
+// 				)}
+// 			</div>
+// 		)
+// 	}
+// 	return (
+// 		<div className='list'>
+// 			<h4>Completed Tasks</h4>
+// 			<p>The Completed List is Currently Unavailable</p>
+// 		</div>
+// 	)
 // }
+
+class FinishedList extends React.Component {
+
+    constructor() {
+      super();
+        this.state = {
+          completed: ['none']
+        }
+      }
+
+    componentDidMount() {
+      const fbListRef = this.props.fbRef.child('completed');
+      fbListRef.on('value', snapshot => {
+        let completedObj = snapshot.val();
+        let completed = Object.values(completedObj);
+        this.setState({
+          completed: completed
+        })
+      })
+    }
+
+  render() {
+
+    var completed = this.state.completed;
+    var fbRef = this.props.fbRef;
+    const fbListRef = fbRef.child(listTitle);
+
+    return (
+      <div className='list'>
+        <h4>Completed Tasks</h4>
+        {completed.map( (task, i) =>
+        <li key={i} className="completed">{task}</li>
+      )}
+      </div>
+    )
+  }
+}
