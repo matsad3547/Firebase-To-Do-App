@@ -21,22 +21,23 @@ const fbRef = firebase
   .ref()
   .child('test1')
 
-const listTitle = 'todos'
-
 export default class App extends React.Component {
 
 	constructor () {
 		super()
 		this.state = {
 			toDoObj: {},
+      completed: ['none'],
 		}
 	}
 
 	componentDidMount () {
 		fbRef.on('value', snapshot => {
 			let toDoObj = snapshot.val()
+      let completed = Object.values(toDoObj.completed)
 			this.setState({
 				toDoObj: toDoObj,
+        completed: completed
 			})
 		})
 	}
@@ -44,7 +45,6 @@ export default class App extends React.Component {
 	render () {
 
 		let listTitles = Object.keys(this.state.toDoObj).filter( title => title != 'completed')
-		let completed = this.state.toDoObj.completed
 
 		return (
       <div>
@@ -64,18 +64,14 @@ export default class App extends React.Component {
 						toDoObj={this.state.toDoObj[listTitle]}
 						/>
 				)}
-				<FinishedList
+				<CompletedList
 					fbRef={fbRef}
+					completed={this.state.completed}
 					/>
       </div>
 		)
 	}
 }
-
-//TODO Make this thing work as a stateless function!
-// <FinishedList
-// 	completed={this.state.toDoObj.completed}
-// 	/>
 
 const CreateList = (props) => {
 
@@ -199,62 +195,16 @@ const ToDoItems = (props) => {
 	)
 }
 
-// const FinishedList = (props) => {
-//
-// 	const { completed } = props
-// 	console.log('completed:', completed)
-//
-// 	if (completed != undefined) { //lame lifecycle anti-pattern work around
-// 		return (
-// 			<div className='list'>
-// 				<h4>Completed Tasks</h4>
-// 				{completed.map( (task, i) =>
-// 					<li key={i} className="completed">{task}</li>
-// 				)}
-// 			</div>
-// 		)
-// 	}
-// 	return (
-// 		<div className='list'>
-// 			<h4>Completed Tasks</h4>
-// 			<p>The Completed List is Currently Unavailable</p>
-// 		</div>
-// 	)
-// }
+const CompletedList = (props) => {
 
-class FinishedList extends React.Component {
+	const { completed } = props
 
-    constructor() {
-      super();
-        this.state = {
-          completed: ['none']
-        }
-      }
-
-    componentDidMount() {
-      const fbListRef = this.props.fbRef.child('completed');
-      fbListRef.on('value', snapshot => {
-        let completedObj = snapshot.val();
-        let completed = Object.values(completedObj);
-        this.setState({
-          completed: completed
-        })
-      })
-    }
-
-  render() {
-
-    var completed = this.state.completed;
-    var fbRef = this.props.fbRef;
-    const fbListRef = fbRef.child(listTitle);
-
-    return (
-      <div className='list'>
-        <h4>Completed Tasks</h4>
-        {completed.map( (task, i) =>
-        <li key={i} className="completed">{task}</li>
-      )}
-      </div>
-    )
-  }
+	return (
+		<div className='list'>
+			<h4>Completed Tasks</h4>
+			{completed.map( (task, i) =>
+				<li key={i} className="completed">{task}</li>
+			)}
+		</div>
+	)
 }
