@@ -10,6 +10,7 @@ var config = {
 }
 
 import React from 'react'
+import { Link } from 'react-router'
 import NavLink from './NavLink'
 import * as firebase from 'firebase'
 
@@ -21,7 +22,31 @@ const fbRef = firebase
   .ref()
   .child('test1')
 
-export default class App extends React.Component {
+export const App = (props) => {
+  return (
+    <div>
+      <h1>The Doozer</h1>
+      <h2>Do Some Stuff!</h2>
+      <ul role="nav">
+        <li><NavLink to="/" onlyActiveOnIndex>Home</NavLink></li>
+        <li><NavLink to="/lists">Lists</NavLink></li>
+        <li><NavLink to="/about">About</NavLink></li>
+      </ul>
+      {props.children}
+    </div>
+  )
+}
+// <Link to="home">Home</Link>
+// <Link to="about">About</Link>
+// {this.props.children || <Home />}
+
+// export default App
+
+// export const Home = () => (
+//   <div>Dummy Home Component</div>
+// )
+
+export class Home extends React.Component {
 
 	constructor () {
 		super()
@@ -48,16 +73,13 @@ export default class App extends React.Component {
 
 		return (
       <div>
-        <h1>The Doozer</h1>
-        <h2>Do Some Stuff!</h2>
         <CreateList
           fbRef={fbRef}
           />
-        <ul role="nav">
-          <li><NavLink to="/" onlyActiveOnIndex>Home</NavLink></li>
-          {listTitles.map( (listTitle, i) => <li key={i}><NavLink to="/{listTitle}">{listTitle}</NavLink></li>
-          )}
-        </ul>
+        <Lists
+          fbRef={fbRef}
+          listTitles={listTitles}
+          />
 				{listTitles.map( (listTitle, i) =>
 					<List
 						key={i}
@@ -73,6 +95,21 @@ export default class App extends React.Component {
       </div>
 		)
 	}
+}
+
+export const Lists = (props) => {
+
+  const { listTitles } = props
+
+  return(
+    <div>
+      <ul>
+        {listTitles.map( (listTitle, i) => <li key={i}><NavLink to="/{listTitle}">{listTitle}</NavLink></li>
+        )}
+      </ul>
+      {props.children}
+    </div>
+  )
 }
 
 const CreateList = (props) => {
@@ -99,7 +136,7 @@ const CreateList = (props) => {
 	)
 }
 
-const List = (props) => {
+export const List = (props) => {
 
 	const { fbRef, listTitle, toDoObj } = props
 
@@ -139,6 +176,14 @@ const List = (props) => {
 		</div>
 	)
 }
+
+export const About = () => (
+  <div>
+    <h2>About</h2>
+    <p>This is a To-Do app with a terrible name that uses React + Router and stores data in Firebase.  You can create new lists, add items to each list once it is created, then check off items that are completed.  The completed items are then displayed on the Completed list.</p>
+    <p>The app also uses stateless functional components as much as possible.  For more check out the code <a href="https://github.com/matsad3547-tiy/wk-08-firebase-app" target="blank">here.</a></p>
+  </div>
+)
 
 const getKeyByVal = (ref, val) => {
   let obj
