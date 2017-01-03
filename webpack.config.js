@@ -24,4 +24,9 @@ module.exports = {
       { test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader?presets[]=es2015&presets[]=react' },
 		],
 	},
+
+	devServer: {
+		inline: true,
+		port: 8081,
+	},
 }

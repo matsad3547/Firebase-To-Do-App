@@ -50,12 +50,14 @@ export default class App extends React.Component {
       <div>
         <h1>The Doozer</h1>
         <h2>Do Some Stuff!</h2>
+        <CreateList
+          fbRef={fbRef}
+          />
         <ul role="nav">
-
+          <li><NavLink to="/" onlyActiveOnIndex>Home</NavLink></li>
+          {listTitles.map( (listTitle, i) => <li key={i}><NavLink to="/{listTitle}">{listTitle}</NavLink></li>
+          )}
         </ul>
-				<CreateList
-					fbRef={fbRef}
-					/>
 				{listTitles.map( (listTitle, i) =>
 					<List
 						key={i}
@@ -137,13 +139,6 @@ const List = (props) => {
 		</div>
 	)
 }
-
-// //
-// // <li><NavLink to="/" onlyActiveOnIndex>Home</NavLink></li>
-// // <li><NavLink to="/about">About</NavLink></li>
-// // <li><NavLink to="/repos">Repos</NavLink></li>
-// //
-//
 
 const getKeyByVal = (ref, val) => {
   let obj
