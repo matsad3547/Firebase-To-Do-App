@@ -45,3 +45,12 @@ input {
   color: gray;
   text-decoration: line-through;
 }
+
+a {
+  color: white;
+  background-color: lightblue;
+}
+
+a:hover {
+  background-color: red;
+}

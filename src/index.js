@@ -1,7 +1,7 @@
 import React from 'react'
 import { render } from 'react-dom'
 import { Router, Route, browserHistory, IndexRoute } from 'react-router'
-import { App, Home, Lists, List, About, listTitles} from './modules/App'
+import { App, Home, Lists, List, About } from './modules/App'
 // import About from './modules/About'
 // import Repos from './modules/Repos'
 // import Repo from './modules/Repo'
@@ -13,10 +13,10 @@ render((
     <Route path="/" component={App}>
       <IndexRoute component={Home}/>
       <Route path="/home" component={Home}/>
+      <Route path="/lists" component={Lists}>
+        <Route path="/lists/:listTitle" component={List}/>
+      </Route>
       <Route path="/about" component={About}/>
     </Route>
   </Router>
 ), document.getElementById('app'))
-
-// <Route path="/lists" component={Lists}/>
-// <Route path="/lists/:listName" component={List}/>
