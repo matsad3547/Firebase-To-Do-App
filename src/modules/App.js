@@ -23,24 +23,9 @@ const fbRef = firebase
   .ref()
   .child('test1')
 
-export const App = (props) => {
-  return (
-    <div>
-      <h1>The Doozer</h1>
-      <h2>Do Some Stuff!</h2>
-      <ul role="nav">
-        <li><NavLink to="/" onlyActiveOnIndex>Home</NavLink></li>
-        <li><NavLink to="/lists">Lists</NavLink></li>
-        <li><NavLink to="/about">About</NavLink></li>
-      </ul>
-      {props.children || <Home />}
-    </div>
-  )
-}
+class App extends React.Component {
 
-export class Home extends React.Component {
-
-	constructor () {
+  constructor () {
 		super()
 		this.state = {
 			toDoObj: {
@@ -50,7 +35,8 @@ export class Home extends React.Component {
 		}
 	}
 
-	componentDidMount () {
+	componentWillMount () {
+    console.log('mounting!');
 		fbRef.on('value', snapshot => {
 			let toDoObj = snapshot.val()
 			this.setState({
@@ -59,24 +45,132 @@ export class Home extends React.Component {
 		})
 	}
 
-	render () {
+  render() {
 
-		let listTitles = Object.keys(this.state.toDoObj).filter( title => title != 'completed')
+    let listTitles = Object.keys(this.state.toDoObj).filter( title => title != 'completed')
 
-		let completed = Object.values(this.state.toDoObj.completed)
+    const completed = ['dummy completed 1', 'dummy completed 2']
 
-		return (
-      <div>
-        <CreateList
-          fbRef={fbRef}
-          />
-				<CompletedList
-					fbRef={fbRef}
-					completed={completed}
-					/>
-      </div>
-		)
-	}
+		// let completed = Object.values(this.state.toDoObj.completed)
+    console.log('completed at App:', completed);
+
+    const homeComponent = (props) => <Home {...props} completed={completed} />
+
+  const prop = {
+    listTitles,
+    completed
+  }
+
+    return (
+      <Router history={browserHistory} >
+        <Route path="/" component={homeComponent}>
+          <Route path="/home" component={homeComponent} />
+          <Route path="/lists" component={(props) => <Lists {...props} listTitles={listTitles} />
+          }>
+            <Route path="/lists/:listTitle" component={List}/></Route>
+          <Route path="/about" component={About}/>
+        </Route>
+      </Router>
+    )
+  }
+}
+
+// <Router history={browserHistory}>
+//   <Route path="/" component={App}>
+//     <IndexRoute component={Home}/>
+//     <Route path="/home" component={Home}/>
+//     <Route path="/lists" component={(props) => <Lists {...props} listTitles={listTitles} />
+//     }>
+//       <Route path="/lists/:listTitle" component={List}/></Route>
+//     <Route path="/about" component={About}/>
+//   </Route>
+// </Router>
+
+export default App
+
+export const Home = (props) => {
+
+  const { completed } = props
+
+  console.log('completed at Home:', completed);
+
+
+  return (
+    <div>
+      <h1>The Doozer</h1>
+      <h2>Do Some Stuff!</h2>
+      <ul role="nav">
+        <li><NavLink to="/" onlyActiveOnIndex>Home</NavLink></li>
+        <li><NavLink to="/lists">Lists</NavLink></li>
+        <li><NavLink to="/about">About</NavLink></li>
+      </ul>
+      <CreateList
+        fbRef={fbRef}
+        />
+      <CompletedList
+        fbRef={fbRef}
+        completed={completed}
+        />
+      {props.children || <Home />}
+    </div>
+  )
+}
+
+// export class Home extends React.Component {
+//
+// 	constructor () {
+// 		super()
+// 		this.state = {
+// 			toDoObj: {
+// 				completed: {},
+//         standInTitle: {},
+// 			},
+// 		}
+// 	}
+//
+// 	componentDidMount () {
+// 		fbRef.on('value', snapshot => {
+// 			let toDoObj = snapshot.val()
+// 			this.setState({
+// 				toDoObj: toDoObj,
+// 			})
+// 		})
+// 	}
+//
+// 	render () {
+//
+// 		let listTitles = Object.keys(this.state.toDoObj).filter( title => title != 'completed')
+//
+// 		let completed = Object.values(this.state.toDoObj.completed)
+//
+// 		return (
+//       <div>
+//         <CreateList
+//           fbRef={fbRef}
+//           />
+// 				<CompletedList
+// 					fbRef={fbRef}
+// 					completed={completed}
+// 					/>
+//       </div>
+// 		)
+// 	}
+// }
+// <ListsWrapper
+//   fbRef={fbRef}
+//   listTitles={listTitles}
+//   />
+
+const ListsWrapper = (props) => {
+
+  const { fbRef, listTitles } = props
+
+  return (
+    <Lists
+      fbRef={fbRef}
+      listTitles={listTitles}
+      />
+  )
 }
 
 // <Lists
@@ -143,8 +237,10 @@ export class Home extends React.Component {
 
 export const Lists = (props) => {
 
-  // const { listTitles } = props
-  let listTitles = ['things', 'stuff', 'test']
+  console.log('props:', props);
+
+  const { listTitles } = props
+  // let listTitles = ['things', 'stuff', 'test']
   // console.log('list titles:', listTitles);
   const getPath = (listTitle) => '/lists/'+listTitle
 
@@ -394,6 +490,10 @@ const ToDoItems = (props) => {
 const CompletedList = (props) => {
 
 	const { completed } = props
+
+  console.log('props at Completed:', props);
+  // console.log('completed:', completed);
+
 
 	return (
 		<div className='list'>
