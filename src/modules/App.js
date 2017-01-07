@@ -45,6 +45,7 @@ export class Home extends React.Component {
 		this.state = {
 			toDoObj: {
 				completed: {},
+        standInTitle: {},
 			},
 		}
 	}
@@ -156,7 +157,7 @@ export const Lists = (props) => {
 
 export const List = (props) => {
 
-  console.log('props:', props);
+  console.log('params:', props.params);
 
   return (
     <div>
