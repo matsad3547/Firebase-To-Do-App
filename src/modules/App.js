@@ -26,18 +26,17 @@ export default class App extends React.Component {
 	constructor () {
 		super()
 		this.state = {
-			toDoObj: {},
-      completed: ['none'],
+			toDoObj: {
+        completed: {},
+      },
 		}
 	}
 
 	componentDidMount () {
 		fbRef.on('value', snapshot => {
 			let toDoObj = snapshot.val()
-      let completed = Object.values(toDoObj.completed)
 			this.setState({
 				toDoObj: toDoObj,
-        completed: completed
 			})
 		})
 	}
@@ -45,6 +44,8 @@ export default class App extends React.Component {
 	render () {
 
 		let listTitles = Object.keys(this.state.toDoObj).filter( title => title != 'completed')
+
+    let completed = Object.values(this.state.toDoObj.completed)
 
 		return (
       <div>
@@ -66,7 +67,7 @@ export default class App extends React.Component {
 				)}
 				<CompletedList
 					fbRef={fbRef}
-					completed={this.state.completed}
+					completed={completed}
 					/>
       </div>
 		)
@@ -138,13 +139,6 @@ const List = (props) => {
 	)
 }
 
-// //
-// // <li><NavLink to="/" onlyActiveOnIndex>Home</NavLink></li>
-// // <li><NavLink to="/about">About</NavLink></li>
-// // <li><NavLink to="/repos">Repos</NavLink></li>
-// //
-//
-
 const getKeyByVal = (ref, val) => {
   let obj
   ref.on('value', snapshot => {
@@ -198,6 +192,7 @@ const ToDoItems = (props) => {
 const CompletedList = (props) => {
 
 	const { completed } = props
+  console.log('completed list items:', completed);
 
 	return (
 		<div className='list'>
