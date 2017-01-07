@@ -43,18 +43,17 @@ export class Home extends React.Component {
 	constructor () {
 		super()
 		this.state = {
-			toDoObj: {},
-      completed: ['none'],
+			toDoObj: {
+				completed: {},
+			},
 		}
 	}
 
 	componentDidMount () {
 		fbRef.on('value', snapshot => {
 			let toDoObj = snapshot.val()
-      let completed = Object.values(toDoObj.completed)
 			this.setState({
 				toDoObj: toDoObj,
-        completed: completed
 			})
 		})
 	}
@@ -63,24 +62,26 @@ export class Home extends React.Component {
 
 		let listTitles = Object.keys(this.state.toDoObj).filter( title => title != 'completed')
 
+		let completed = Object.values(this.state.toDoObj.completed)
+
 		return (
       <div>
         <CreateList
           fbRef={fbRef}
           />
+				<Lists
+					fbRef={fbRef}
+					listTitles={listTitles}
+					/>
 				<CompletedList
 					fbRef={fbRef}
-					completed={this.state.completed}
+					completed={completed}
 					/>
       </div>
 		)
 	}
 }
 
-// <Lists
-//   fbRef={fbRef}
-//   listTitles={listTitles}
-//   />
 
 // {listTitles.map( (listTitle, i) =>
 //   <List
@@ -91,89 +92,67 @@ export class Home extends React.Component {
 //     />
 // )}
 
-export class Lists extends React.Component {
-
-  	constructor () {
-  		super()
-  		this.state = {
-  			toDoObj: {},
-        listTitles: [],
-  		}
-  	}
-
-  	componentDidMount () {
-  		fbRef.on('value', snapshot => {
-  			let toDoObj = snapshot.val()
-  			this.setState({
-  				toDoObj: toDoObj,
-          listTitles: ['things', 'stuff'],
-  			})
-  		})
-  	}
-
-  render () {
-
-    // let listTitles = ['things', 'stuff']
-
-    // let listTitles = Object.keys(this.state.toDoObj).filter( title => title != 'completed')
-      const getPath = (listTitle) => {
-        return '/lists/'+listTitle
-      }
-
-
-    // console.log('list titles:', listTitles);
-
-    return(
-      <div>
-        <ul>
-          {this.state.listTitles.map( (listTitle, i) => <li key={i}><NavLink to={getPath(listTitle)}>{listTitle}</NavLink></li>
-          )}
-        </ul>
-      </div>
-    )
-  }
-}
-
-// export const Lists = (props) => {
+// export class Lists extends React.Component {
 //
-//   // const { listTitles } = props
-//   let listTitles = ['things', 'stuff']
-//   const getPath = (listTitle) => '/lists/'+listTitle
+//   	constructor () {
+//   		super()
+//   		this.state = {
+//   			toDoObj: {},
+//         listTitles: [],
+//   		}
+//   	}
 //
-//   return(
-//     <div>
-//       <ul>
-//         {listTitles.map( (listTitle, i) => <li key={i}><NavLink to={getPath(listTitle)}>{listTitle}</NavLink></li>
-//         )}
-//       </ul>
-//       {props.children}
-//     </div>
-//   )
+//   	componentDidMount () {
+//   		fbRef.on('value', snapshot => {
+//   			let toDoObj = snapshot.val()
+//   			this.setState({
+//   				toDoObj: toDoObj,
+//           listTitles: ['things', 'stuff'],
+//   			})
+//   		})
+//   	}
+//
+//   render () {
+//
+//     // let listTitles = ['things', 'stuff']
+//
+//     // let listTitles = Object.keys(this.state.toDoObj).filter( title => title != 'completed')
+//       const getPath = (listTitle) => {
+//         return '/lists/'+listTitle
+//       }
+//
+//
+//     // console.log('list titles:', listTitles);
+//
+//     return(
+//       <div>
+//         <ul>
+//           {this.state.listTitles.map( (listTitle, i) => <li key={i}><NavLink to={getPath(listTitle)}>{listTitle}</NavLink></li>
+//           )}
+//         </ul>
+//       </div>
+//     )
+//   }
 // }
 
-const CreateList = (props) => {
+export const Lists = (props) => {
 
-	const { fbRef } = props
+  const { listTitles } = props
+	console.log('list titles:', listTitles);
+  // let listTitles = ['things', 'stuff']
+  const getPath = (listTitle) => '/lists/'+listTitle
 
-	let input
-
-	const handleListSubmit = e => {
-		e.preventDefault()
-		let newList = input.value
-		fbRef.child(newList).push('there\'s stuff to do!')
-		input.value = ''
-	}
-
-	return (
-		<div>
-			<h3>Create a New To-Do List</h3>
-			<form onSubmit={handleListSubmit}>
-				<input type="text" placeholder="New List Name" ref={ node => input = node} /> {' '}
-				<button className="form" type="submit">Go</button>
-			</form>
-		</div>
-	)
+  return(
+    <div>
+      <ul>
+        {listTitles.map( (listTitle, i) => <li key={i}><NavLink to={getPath(listTitle)}>{listTitle}</NavLink></li>
+        )}
+      </ul>
+      {props.children}
+    </div>
+  )
 }
+
 
 export const List = (props) => {
 
@@ -236,6 +215,30 @@ export const List = (props) => {
 // 		</div>
 // 	)
 // }
+
+const CreateList = (props) => {
+
+	const { fbRef } = props
+
+	let input
+
+	const handleListSubmit = e => {
+		e.preventDefault()
+		let newList = input.value
+		fbRef.child(newList).push('there\'s stuff to do!')
+		input.value = ''
+	}
+
+	return (
+		<div>
+			<h3>Create a New To-Do List</h3>
+			<form onSubmit={handleListSubmit}>
+				<input type="text" placeholder="New List Name" ref={ node => input = node} /> {' '}
+					<button className="form" type="submit">Go</button>
+				</form>
+			</div>
+		)
+	}
 
 export const About = () => (
   <div>
