@@ -23,72 +23,19 @@ const fbRef = firebase
   .ref()
   .child('test1')
 
-class App extends React.Component {
-
-  constructor () {
-		super()
-		this.state = {
-			toDoObj: {
-				completed: {},
-        standInTitle: {},
-			},
-		}
-	}
-
-	componentWillMount () {
-    console.log('mounting!');
-		fbRef.on('value', snapshot => {
-			let toDoObj = snapshot.val()
-			this.setState({
-				toDoObj: toDoObj,
-			})
-		})
-	}
-
-  render() {
-
-    let listTitles = Object.keys(this.state.toDoObj).filter( title => title != 'completed')
-
-    const completed = ['dummy completed 1', 'dummy completed 2']
-
-		// let completed = Object.values(this.state.toDoObj.completed)
-    console.log('completed at App:', completed);
-
-    const homeComponent = (props) => <Home {...props} completed={completed} />
-
-  const prop = {
-    listTitles,
-    completed
-  }
-
+  const Routes = () => {
     return (
-      <Router history={browserHistory} >
-        <Route path="/" component={homeComponent}>
-          <Route path="/home" component={homeComponent} />
-          <Route path="/lists" component={(props) => <Lists {...props} listTitles={listTitles} />
-          }>
-            <Route path="/lists/:listTitle" component={List}/></Route>
-          <Route path="/about" component={About}/>
-        </Route>
-      </Router>
+      <Route path='/' component={Home}>
+        <IndexRoute path='#' component={Home} />
+        <Route path='home' component={Home} />
+        <Route path='about' component={About} />
+      </Route>
     )
   }
-}
 
-// <Router history={browserHistory}>
-//   <Route path="/" component={App}>
-//     <IndexRoute component={Home}/>
-//     <Route path="/home" component={Home}/>
-//     <Route path="/lists" component={(props) => <Lists {...props} listTitles={listTitles} />
-//     }>
-//       <Route path="/lists/:listTitle" component={List}/></Route>
-//     <Route path="/about" component={About}/>
-//   </Route>
-// </Router>
+export default Routes
 
-export default App
-
-export const Home = (props) => {
+const Home = (props) => {
 
   const { completed } = props
 
@@ -104,17 +51,83 @@ export const Home = (props) => {
         <li><NavLink to="/lists">Lists</NavLink></li>
         <li><NavLink to="/about">About</NavLink></li>
       </ul>
-      <CreateList
-        fbRef={fbRef}
-        />
-      <CompletedList
-        fbRef={fbRef}
-        completed={completed}
-        />
-      {props.children || <Home />}
+      {props.children}
     </div>
   )
 }
+
+// <CreateList
+//   fbRef={fbRef}
+//   />
+// <CompletedList
+//   fbRef={fbRef}
+//   completed={completed}
+//   />
+
+// class Routes extends React.Component {
+//
+//   constructor () {
+// 		super()
+// 		this.state = {
+// 			toDoObj: {
+// 				completed: {},
+//         standInTitle: {},
+// 			},
+// 		}
+// 	}
+//
+// 	componentWillMount () {
+//     console.log('mounting!');
+// 		fbRef.on('value', snapshot => {
+// 			let toDoObj = snapshot.val()
+// 			this.setState({
+// 				toDoObj: toDoObj,
+// 			})
+// 		})
+// 	}
+//
+//   render() {
+//
+//     let listTitles = Object.keys(this.state.toDoObj).filter( title => title != 'completed')
+//
+//     const completed = ['dummy completed 1', 'dummy completed 2']
+//
+// 		// let completed = Object.values(this.state.toDoObj.completed)
+//     // console.log('completed at App:', completed);
+//
+//     // const homeComponent = (props) => <Home {...props} completed={completed} />
+//
+//     const homeComponent = (props) => {
+//       console.log('Passing completed:', completed);
+//       return <Home {...props} completed={completed} />
+//     }
+//
+//     return (
+//
+//       <Route path="/" component={homeComponent}>
+//         <Route path="/home" component={homeComponent} />
+//         <Route path="/lists" component={
+//             (props) => <Lists {...props} listTitles={listTitles} />
+//         }>
+//           <Route path="/lists/:listTitle" component={List}/></Route>
+//         <Route path="/about" component={About}/>
+//       </Route>
+//
+//     )
+//   }
+// }
+
+// <Router history={browserHistory}>
+//   <Route path="/" component={App}>
+//     <IndexRoute component={Home}/>
+//     <Route path="/home" component={Home}/>
+//     <Route path="/lists" component={(props) => <Lists {...props} listTitles={listTitles} />
+//     }>
+//       <Route path="/lists/:listTitle" component={List}/></Route>
+//     <Route path="/about" component={About}/>
+//   </Route>
+// </Router>
+
 
 // export class Home extends React.Component {
 //
