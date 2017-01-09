@@ -1,4 +1,6 @@
 // Initialize Firebase
+import * as firebase from 'firebase'
+
 var config = {
   apiKey: "AIzaSyAmJBXk8-6Ag5e-VTpHwqCa3zooEdd3KHM",
   authDomain: "wk-08-firebase-app.firebaseapp.com",
@@ -7,8 +9,16 @@ var config = {
   messagingSenderId: "592761265728"
 };
 
-var FbApp = firebase.initializeApp(config);
+const fbRef = firebase
+  .initializeApp(config)
+  .database()
+  .ref()
+  .child('test1')
 
-import * as firebase from "firebase";
+export default fbRef
 
-module.export.FbApp = FbApp.database();
+// var FbApp = firebase.initializeApp(config);
+//
+// import * as firebase from "firebase";
+//
+// module.export.FbApp = FbApp.database();
