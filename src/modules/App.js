@@ -31,10 +31,10 @@ const App = () => {
       <div >
         <h1>The Doozer</h1>
         <h3>Do Some Stuff!</h3>
-        <ul className="nav">
-          <li><Link to="/">Home</Link></li>
-          <li><Link to="/about">About</Link></li>
-          <li><Link to="/lists">Lists</Link></li>
+        <ul>
+          <li className="nav"><Link to="/lists">Lists</Link></li>
+          <li className="nav menu"><Link to="/">Home</Link></li>
+          <li className="nav menu"><Link to="/about">About</Link></li>
         </ul>
 
         <hr/>
@@ -123,38 +123,41 @@ class Lists extends React.Component {
 
   render () {
 
-    let listTitles = Object.keys(this.state.toDoObj).filter( title => title != 'completed')
+    let toDoObj = this.state.toDoObj
+
+    let listTitles = Object.keys(toDoObj).filter( title => title != 'completed')
     // console.log('list titles:', listTitles);
 
     let pathname = this.props.pathname
 
-    const getToDoList = (listTitle) => this.state.toDoObj[listTitle]
+    const getToDoList = (listTitle) => toDoObj[listTitle]
 
     return(
       <div>
+
+        <ul className="listlinks">
+          {listTitles.map( (listTitle, i) => <li className="nav" key={i}><Link to={`${pathname}/${listTitle}`}>{listTitle}</Link></li>
+          )}
+        </ul>
+
         <Match pattern={pathname} exactly render={ () =>
             <h3>Please Select a List</h3>
           } />
-          <Match pattern={`${pathname}/:listTitle`} component={List} />
-
-        <ul className="listlinks">
-          {listTitles.map( (listTitle, i) => <li key={i}><Link to={{
-            pathname: `${pathname}/${listTitle}`,
-            query: getToDoList(listTitle),
-          }}>{listTitle}</Link></li>
-          )}
-        </ul>
+        <Match pattern={`${pathname}/:listTitle`} component={(params) => <List params={params} toDoObj={toDoObj}/>}/>
       </div>
     )
   }
 }
 
-const List = ({ params, location }) => {
+const List = ({ params, toDoObj }) => {
 
-	let toDos = Object.values(location.query)
+  console.log('params at list:', params);
+
+  let listTitle = params.params.listTitle
+
+	let toDos = Object.values(toDoObj[listTitle])
   console.log('todos at List:', toDos);
 
-  let listTitle = params.listTitle
 
 	let input
 

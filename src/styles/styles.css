@@ -54,3 +54,11 @@ a {
 a:hover {
   background-color: red;
 }
+
+.nav {
+  display: inline;
+}
+
+.menu {
+  float: right;
+}
