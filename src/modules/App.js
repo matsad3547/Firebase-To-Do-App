@@ -10,8 +10,7 @@ var config = {
 }
 
 import React from 'react'
-import { Link } from 'react-router'
-import { Router, Route, browserHistory, IndexRoute, Match } from 'react-router'
+import { BrowserRouter, Match, Miss, Link } from 'react-router'
 import NavLink from './NavLink'
 import * as firebase from 'firebase'
 
@@ -23,42 +22,223 @@ const fbRef = firebase
   .ref()
   .child('test1')
 
-  const Routes = () => {
-    return (
-      <Route path='/' component={Home}>
-        <IndexRoute path='#' component={Home} />
-        <Route path='home' component={Home} />
-        <Route path='about' component={About} />
-      </Route>
-    )
-  }
+const App = () => {
 
-export default Routes
+  const listTitles = ['things', 'stuff', 'poop']
 
-const Home = (props) => {
+  return (
+    <BrowserRouter>
+      <div >
+        <h1>The Doozer</h1>
+        <h3>Do Some Stuff!</h3>
+        <ul className="nav">
+          <li><Link to="/">Home</Link></li>
+          <li><Link to="/about">About</Link></li>
+          <li><Link to="/lists">Lists</Link></li>
+        </ul>
 
-  const { completed } = props
+        <hr/>
 
-  console.log('completed at Home:', completed);
+        <Match exactly pattern="/" component={Home} />
+        <Match pattern="/about" component={About} />
+        <Match pattern="/lists" component={Lists} />
 
+        <Miss component={NoMatch} />
+
+      </div>
+    </BrowserRouter>
+  )
+}
+
+export default App
+
+const NoMatch = () => (
+  <div>
+    <h3>Sorry!</h3>
+    <p>{location.pathname} does not match any pages</p>
+  </div>
+)
+
+const Home = () => {
 
   return (
     <div>
-      <h1>The Doozer</h1>
-      <h2>Do Some Stuff!</h2>
-      <ul role="nav">
-        <li><NavLink to="/" onlyActiveOnIndex>Home</NavLink></li>
-        <li><NavLink to="/lists">Lists</NavLink></li>
-        <li><NavLink to="/about">About</NavLink></li>
-      </ul>
-      {props.children}
+      <CreateList
+        fbRef={fbRef}
+        />
     </div>
   )
 }
 
-// <CreateList
-//   fbRef={fbRef}
-//   />
+const CreateList = ({ fbRef }) => {
+
+	let input
+
+	const handleListSubmit = e => {
+		e.preventDefault()
+		let newList = input.value
+		fbRef.child(newList).push('there\'s stuff to do!')
+		input.value = ''
+	}
+
+	return (
+		<div>
+			<h3>Create a New To-Do List</h3>
+			<form onSubmit={handleListSubmit}>
+				<input type="text" placeholder="New List Name" ref={ node => input = node} /> {' '}
+					<button className="form" type="submit">Go</button>
+				</form>
+			</div>
+		)
+	}
+
+const About = () => (
+  <div>
+    <h2>About</h2>
+    <p>This is a To-Do app with a terrible name that uses React + Router and stores data in Firebase.  You can create new lists, add items to each list once it is created, then check off items that are completed.  The completed items are then displayed on the Completed list.</p>
+    <br/>
+    <p>The app also uses stateless functional components as much as possible.  For more check out the code <a href="https://github.com/matsad3547-tiy/wk-08-firebase-app" target="blank">here.</a></p>
+  </div>
+)
+
+class Lists extends React.Component {
+
+  	constructor () {
+  		super()
+  		this.state = {
+  			toDoObj: {
+          standInTitle: 'standinTitle'
+        },
+  		}
+  	}
+
+  	componentDidMount () {
+  		fbRef.on('value', snapshot => {
+  			let toDoObj = snapshot.val()
+  			this.setState({
+  				toDoObj,
+  			})
+  		})
+  	}
+
+  render () {
+
+    let listTitles = Object.keys(this.state.toDoObj).filter( title => title != 'completed')
+    // console.log('list titles:', listTitles);
+
+    let pathname = this.props.pathname
+
+    const getToDoList = (listTitle) => this.state.toDoObj[listTitle]
+
+    return(
+      <div>
+        <Match pattern={pathname} exactly render={ () =>
+            <h3>Please Select a List</h3>
+          } />
+          <Match pattern={`${pathname}/:listTitle`} component={List} />
+
+        <ul className="listlinks">
+          {listTitles.map( (listTitle, i) => <li key={i}><Link to={{
+            pathname: `${pathname}/${listTitle}`,
+            query: getToDoList(listTitle),
+          }}>{listTitle}</Link></li>
+          )}
+        </ul>
+      </div>
+    )
+  }
+}
+
+const List = ({ params, location }) => {
+
+	let toDos = Object.values(location.query)
+  console.log('todos at List:', toDos);
+
+  let listTitle = params.listTitle
+
+	let input
+
+	const handleToDoSubmit = e => {
+		e.preventDefault()
+		let task = input.value
+		let fbListRef = fbRef.child(listTitle);
+		let taskId = fbListRef.push().key
+		let updates = {}
+		let updateListTitle = listTitle + '/'
+		updates[updateListTitle + taskId] = task
+		fbRef.update(updates)
+		input.value = ''
+	}
+
+	return (
+
+		<div className='list'>
+			<h3>{listTitle}</h3>
+			<form onSubmit={handleToDoSubmit}>
+				<input type="text" placeholder="New Task" className="form" id="listInput" ref={ (node) => input = node}/> {' '}
+				<button className="form" type="submit">Add</button>
+			</form>
+			<ul>
+				<li className="label">Done?</li>
+				<li className="label">To-Do Item</li>
+			</ul>
+			<ToDoItems
+				toDos={toDos}
+				listTitle={listTitle}
+				/>
+		</div>
+	)
+}
+
+const getKeyByVal = (ref, val) => {
+  let obj
+  ref.on('value', snapshot => {
+    obj = snapshot.val()
+  })
+  for (let key in obj) {
+    if (obj.hasOwnProperty(key) && obj[key] === val) {
+      return key
+    }
+  }
+}
+
+const ToDoItems = ({ toDos, listTitle }) => {
+
+	let input
+
+	const toggleTask = self => {
+
+		self.preventDefault()
+
+		let completedTask = self.target.id
+
+		const fbCompletedRef = fbRef.child('completed')
+		const taskId = fbCompletedRef.push().key
+
+		let updates = {}
+		updates['completed/' + taskId] = completedTask
+		fbRef.update(updates)
+
+		let deleted = {}
+		let deleteKey = getKeyByVal(fbRef.child(listTitle), completedTask)
+		let deletedItemList = listTitle + '/'
+		deleted[deletedItemList + deleteKey] = null
+		fbRef.update(deleted)
+	}
+
+	return (
+		<div>
+			{toDos.map((toDo, i) =>
+			<li key={i}>
+				<input type="checkbox" key={i + 'A'} className="task" id={toDo} onChange={toggleTask} ></input>
+				<p key={i + 'B'} className="task">{toDo}</p>
+			</li>
+		)}
+		</div>
+	)
+}
+
+
 // <CompletedList
 //   fbRef={fbRef}
 //   completed={completed}
@@ -174,18 +354,6 @@ const Home = (props) => {
 //   listTitles={listTitles}
 //   />
 
-const ListsWrapper = (props) => {
-
-  const { fbRef, listTitles } = props
-
-  return (
-    <Lists
-      fbRef={fbRef}
-      listTitles={listTitles}
-      />
-  )
-}
-
 // <Lists
 //   fbRef={fbRef}
 //   listTitles={listTitles}
@@ -200,320 +368,128 @@ const ListsWrapper = (props) => {
 //     />
 // )}
 
-// export class Lists extends React.Component {
+
+
+
+//  class List extends React.Component{
 //
 //   	constructor () {
 //   		super()
+//       this.handleToDoSubmit = this.handleToDoSubmit.bind(this)
+//       this.handleOnInput = this.handleOnInput.bind(this)
+//       this.retrieveToDoObj = this.retrieveToDoObj.bind(this)
+//
 //   		this.state = {
 //   			toDoObj: {
-//           standInTitle: {}
-//         },
-//
+//   				completed: {},
+//           standInTitle: {},
+//   			},
+//         value: null,
+//         listTitle: null,
 //   		}
 //   	}
 //
-//   	componentDidMount () {
-//   		fbRef.on('value', snapshot => {
-//   			let toDoObj = snapshot.val()
-//   			this.setState({
-//   				toDoObj: toDoObj,
-//           // listTitles: ['things', 'stuff'],
-//   			})
-//   		})
+//     retrieveToDoObj (snapshot) {
+//       let toDoObj = snapshot.val()
+//       this.setState({
+//         toDoObj: toDoObj,
+//       })
+//     }
+//
+//   	componentWillMount () {
+//   		fbRef.on('value', this.retrieveToDoObj)
+//       this.setState({
+//         listTitle: this.props.params.listTitle,
+//       })
+//       console.log('mounting!');
 //   	}
 //
-//   render () {
+//     // componentWillUnmount () {
+//     //   fbRef.off('value', this.retrieveToDoObj)
+//     //   console.log('unmounting!')
+//     // }
 //
-//     let listTitles = ['things', 'stuff', 'test']
+//     handleToDoSubmit (e) {
+//     		e.preventDefault()
+//     		let task = this.state.value
+//     		let fbListRef = fbRef.child(this.state.listTitle);
+//     		let taskId = fbListRef.push().key
+//     		let updates = {}
+//     		let updateListTitle = this.state.listTitle + '/'
+//     		updates[updateListTitle + taskId] = task
+//     		fbRef.update(updates)
+//         console.log('setting state.value');
+//     		this.setState({
+//           value: '',
+//         })
+//     	}
 //
-//     // let listTitles = Object.keys(this.state.toDoObj).filter( title => title != 'completed')
-//     console.log('list titles:', listTitles);
+//     handleOnInput (e) {
+//       this.setState({
+//         value: e.target.value,
+//         })
+//     }
 //
-//       const getPath = (listTitle) => {
-//         let path = '/lists/'+listTitle
-//         console.log('path:', path);
-//         return path
-//       }
+//   render() {
 //
-//     // console.log('list titles:', listTitles);
+//     let listTitle = this.state.listTitle
+//     // console.log('list title:', listTitle);
 //
-//     return(
-//       <div>
-//         <ul>
-//           {listTitles.map( (listTitle, i) => <li key={i}><NavLink to={getPath(listTitle)}>{listTitle}</NavLink></li>
-//           )}
-//         </ul>
-//       </div>
+//     // console.log('to do obj:', this.state.toDoObj);
+//
+//     let toDos = Object.values(this.state.toDoObj[listTitle])
+//
+//     // console.log('to dos:', toDos);
+//
+//     return (
+//       <div className='list'>
+//   			<h3>{this.props.params.listTitle}</h3>
+//   			<form onSubmit={this.handleToDoSubmit}>
+//   				<input type="text" placeholder="New Task" className="form" id="listInput" onInput={this.handleOnInput} value={this.state.value} /> {' '}
+//   				<button className="form" type="submit">Add</button>
+//   			</form>
+//   			<ul>
+//   				<li className="label">Done?</li>
+//   				<li className="label">To-Do Item</li>
+//   			</ul>
+//   			<ToDoItems
+//   				toDos={toDos}
+//   				fbRef={fbRef}
+//   				listTitle={listTitle}
+//   				/>
+//   		</div>
 //     )
 //   }
 // }
 
-export const Lists = (props) => {
-
-  console.log('props:', props);
-
-  const { listTitles } = props
-  // let listTitles = ['things', 'stuff', 'test']
-  // console.log('list titles:', listTitles);
-  const getPath = (listTitle) => '/lists/'+listTitle
-
-  return(
-    <div>
-      <ul>
-        {listTitles.map( (listTitle, i) => <li key={i}><NavLink to={getPath(listTitle)}>{listTitle}</NavLink></li>
-        )}
-      </ul>
-      {props.children}
-    </div>
-  )
-}
-
-
-// export const List = (props) => {
-//
-//   console.log('params:', props.params);
-//
-//   return (
-//     <div>
-//         <h2>{props.params.listTitle}</h2>
-//     </div>
-//   )
-// }
-
-
-
-export class List extends React.Component{
-
-  	constructor () {
-  		super()
-      this.handleToDoSubmit = this.handleToDoSubmit.bind(this)
-      this.handleOnInput = this.handleOnInput.bind(this)
-      this.retrieveToDoObj = this.retrieveToDoObj.bind(this)
-
-  		this.state = {
-  			toDoObj: {
-  				completed: {},
-          standInTitle: {},
-  			},
-        value: null,
-        listTitle: null,
-  		}
-  	}
-
-    retrieveToDoObj (snapshot) {
-      let toDoObj = snapshot.val()
-      this.setState({
-        toDoObj: toDoObj,
-      })
-    }
-
-  	componentWillMount () {
-  		fbRef.on('value', this.retrieveToDoObj)
-      this.setState({
-        listTitle: this.props.params.listTitle,
-      })
-      console.log('mounting!');
-  	}
-
-    // componentWillUnmount () {
-    //   fbRef.off('value', this.retrieveToDoObj)
-    //   console.log('unmounting!')
-    // }
-
-    handleToDoSubmit (e) {
-    		e.preventDefault()
-    		let task = this.state.value
-    		let fbListRef = fbRef.child(this.state.listTitle);
-    		let taskId = fbListRef.push().key
-    		let updates = {}
-    		let updateListTitle = this.state.listTitle + '/'
-    		updates[updateListTitle + taskId] = task
-    		fbRef.update(updates)
-        console.log('setting state.value');
-    		this.setState({
-          value: '',
-        })
-    	}
-
-    handleOnInput (e) {
-      this.setState({
-        value: e.target.value,
-        })
-    }
-
-  render() {
-
-    let listTitle = this.state.listTitle
-    // console.log('list title:', listTitle);
-
-    // console.log('to do obj:', this.state.toDoObj);
-
-    let toDos = Object.values(this.state.toDoObj[listTitle])
-
-    // console.log('to dos:', toDos);
-
-    return (
-      <div className='list'>
-  			<h3>{this.props.params.listTitle}</h3>
-  			<form onSubmit={this.handleToDoSubmit}>
-  				<input type="text" placeholder="New Task" className="form" id="listInput" onInput={this.handleOnInput} value={this.state.value} /> {' '}
-  				<button className="form" type="submit">Add</button>
-  			</form>
-  			<ul>
-  				<li className="label">Done?</li>
-  				<li className="label">To-Do Item</li>
-  			</ul>
-  			<ToDoItems
-  				toDos={toDos}
-  				fbRef={fbRef}
-  				listTitle={listTitle}
-  				/>
-  		</div>
-    )
-  }
-}
-
 // <div>
 //   <h2>{this.props.params.listTitle}</h2>
 // </div>
-// export const List = (props) => {
+
+
+
+
+
+
+
+
 //
-// 	const { fbRef, listTitle, toDoObj } = props
+
 //
-// 	let toDos = Object.values(toDoObj)
+// const CompletedList = (props) => {
 //
-// 	let input
+// 	const { completed } = props
 //
-// 	const handleToDoSubmit = e => {
-// 		e.preventDefault()
-// 		let task = input.value
-// 		let fbListRef = fbRef.child(listTitle);
-// 		let taskId = fbListRef.push().key
-// 		let updates = {}
-// 		let updateListTitle = listTitle + '/'
-// 		updates[updateListTitle + taskId] = task
-// 		fbRef.update(updates)
-// 		input.value = ''
-// 	}
+//   console.log('props at Completed:', props);
+//   // console.log('completed:', completed);
+//
 //
 // 	return (
-//
 // 		<div className='list'>
-// 			<h3>{listTitle}</h3>
-// 			<form onSubmit={handleToDoSubmit}>
-// 				<input type="text" placeholder="New Task" className="form" id="listInput" ref={ (node) => input = node}/> {' '}
-// 				<button className="form" type="submit">Add</button>
-// 			</form>
-// 			<ul>
-// 				<li className="label">Done?</li>
-// 				<li className="label">To-Do Item</li>
-// 			</ul>
-// 			<ToDoItems
-// 				toDos={toDos}
-// 				fbRef={fbRef}
-// 				listTitle={listTitle}
-// 				/>
+// 			<h4>Completed Tasks</h4>
+// 			{completed.map( (task, i) =>
+// 				<li key={i} className="completed">{task}</li>
+// 			)}
 // 		</div>
 // 	)
 // }
-
-const CreateList = (props) => {
-
-	const { fbRef } = props
-
-	let input
-
-	const handleListSubmit = e => {
-		e.preventDefault()
-		let newList = input.value
-		fbRef.child(newList).push('there\'s stuff to do!')
-		input.value = ''
-	}
-
-	return (
-		<div>
-			<h3>Create a New To-Do List</h3>
-			<form onSubmit={handleListSubmit}>
-				<input type="text" placeholder="New List Name" ref={ node => input = node} /> {' '}
-					<button className="form" type="submit">Go</button>
-				</form>
-			</div>
-		)
-	}
-
-export const About = () => (
-  <div>
-    <h2>About</h2>
-    <p>This is a To-Do app with a terrible name that uses React + Router and stores data in Firebase.  You can create new lists, add items to each list once it is created, then check off items that are completed.  The completed items are then displayed on the Completed list.</p>
-    <br/>
-    <p>The app also uses stateless functional components as much as possible.  For more check out the code <a href="https://github.com/matsad3547-tiy/wk-08-firebase-app" target="blank">here.</a></p>
-  </div>
-)
-
-const getKeyByVal = (ref, val) => {
-  let obj
-  ref.on('value', snapshot => {
-    obj = snapshot.val()
-  })
-  for (let key in obj) {
-    if (obj.hasOwnProperty(key) && obj[key] === val) {
-      return key
-    }
-  }
-}
-
-const ToDoItems = (props) => {
-
-	let input
-
-	const { fbRef, toDos, listTitle } = props
-
-	const toggleTask = self => {
-
-		self.preventDefault()
-
-		let completedTask = self.target.id
-
-		const fbCompletedRef = fbRef.child('completed')
-		const taskId = fbCompletedRef.push().key
-
-		let updates = {}
-		updates['completed/' + taskId] = completedTask
-		fbRef.update(updates)
-
-		let deleted = {}
-		let deleteKey = getKeyByVal(fbRef.child(listTitle), completedTask)
-		let deletedItemList = listTitle + '/'
-		deleted[deletedItemList + deleteKey] = null
-		fbRef.update(deleted)
-	}
-
-	return (
-		<div>
-			{toDos.map((toDo, i) =>
-			<li key={i}>
-				<input type="checkbox" key={i + 'A'} className="task" id={toDo} onChange={toggleTask} ></input>
-				<p key={i + 'B'} className="task">{toDo}</p>
-			</li>
-		)}
-		</div>
-	)
-}
-
-const CompletedList = (props) => {
-
-	const { completed } = props
-
-  console.log('props at Completed:', props);
-  // console.log('completed:', completed);
-
-
-	return (
-		<div className='list'>
-			<h4>Completed Tasks</h4>
-			{completed.map( (task, i) =>
-				<li key={i} className="completed">{task}</li>
-			)}
-		</div>
-	)
-}
