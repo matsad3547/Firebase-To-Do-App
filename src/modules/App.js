@@ -125,7 +125,7 @@ class Lists extends React.Component {
         <Match pattern={pathname} exactly render={ () =>
             <h3>Please Select a List</h3>
           } />
-        <Match pattern={`${pathname}/:listTitle`} component={(params) => <List params={params} toDoObj={toDoObj}/>}/>
+        <Match pattern={`${pathname}/:listTitle`} component={(props) => <List {...props} toDoObj={toDoObj}/>}/>
       </div>
     )
   }
@@ -176,7 +176,7 @@ class List extends React.Component{
 
 	 handleToDoSubmit (e, props) {
 		e.preventDefault()
-    const listTitle = this.props.params.params.listTitle
+    const listTitle = this.props.params.listTitle
 		let task = this.input.value
 		let fbListRef = fbRef.child(listTitle);
 		let taskId = fbListRef.push().key
@@ -191,7 +191,7 @@ class List extends React.Component{
 
     let { params, toDoObj } = this.props
 
-    const listTitle = params.params.listTitle
+    const listTitle = this.props.params.listTitle
 
     let toDos = Object.values(toDoObj[listTitle])
     console.log('todos at List:', toDos);
